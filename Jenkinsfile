@@ -7,22 +7,25 @@ pipeline {
   }
 
   environment {
-        APP_PORT = ''
-        DOCKER_IMAGE_NAME = ''
-    }
+    APP_NAME = "my-app"
+    IMAGE_TAG = "v1.0"
+    DOCKER_IMAGE = ""
+    PORT = ""
+  }
 
   stages {
-    stage('Prepare Environment') {
+    stage('Initialize') {
       steps {
         script {
-          if (env.BRANCH_NAME == 'main') {
-            env.APP_PORT = '3000'
-            env.DOCKER_IMAGE_NAME = "nodemain:v1.0"
+          echo "Detected Branch: ${env.BRANCH_NAME}"
+
+          if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
+            env.DOCKER_IMAGE = "nodemain:${env.IMAGE_TAG}"
+            env.PORT = "3000"
           } else if (env.BRANCH_NAME == 'dev') {
-            env.APP_PORT = '3001'
-            env.DOCKER_IMAGE_NAME = "nodedev:v1.0"
+            env.DOCKER_IMAGE = "nodedev:${env.IMAGE_TAG}"
+            env.PORT = "3001"
           }
-          echo "Deploying branch ${env.BRANCH_NAME} to port ${env.APP_PORT}"
         }
       }
     }
@@ -50,10 +53,12 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        echo "Deploying application..."
-        sh 'docker ps -q | xargs -r docker stop'
-        sh 'docker ps -aq | xargs -r docker rm'
-        sh "docker run -d --expose ${env.APP_PORT} -p ${env.APP_PORT}:${env.APP_PORT} ${env.DOCKER_IMAGE_NAME}"
+        script {
+          sh "docker stop ${env.APP_NAME}-${env.BRANCH_NAME} || true"
+          sh "docker rm ${env.APP_NAME}-${env.BRANCH_NAME} || true"
+          
+          sh "docker run -d --name ${env.APP_NAME}-${env.BRANCH_NAME} -p ${env.PORT}:3000 ${env.DOCKER_IMAGE}"
+        }
       }
     }
   }
