@@ -2,21 +2,15 @@ pipeline {
   agent any
 
   stages {
-    stage('Install') {
+    stage('Build') {
       steps {
-        sh 'npm install'
+        sh './scripts/build.sh'
       }
     }
 
     stage('Test') {
       steps {
-        sh 'npm test -- --watchAll=false'
-      }
-    }
-
-    stage('Build') {
-      steps {
-        sh 'npm run build'
+        sh './scripts/test.sh'
       }
     }
   }
