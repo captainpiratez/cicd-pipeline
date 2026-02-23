@@ -82,16 +82,15 @@ pipeline {
         }
       }
     }
+  }
 
-    stage('Deploy') {
-      steps {
-        script {
-          sh "docker --version"
-          sh "docker version --format '{{.Client.APIVersion}}'"
-          sh "docker stop ${env.APP_NAME}-${env.BRANCH_NAME} || true"
-          sh "docker rm ${env.APP_NAME}-${env.BRANCH_NAME} || true"
-          
-          sh "docker run -d --name ${env.APP_NAME}-${env.BRANCH_NAME} -p ${env.PORT}:3000 ${env.DOCKER_IMAGE}"
+  post {
+    success {
+      script {
+        if (env.BRANCH_NAME == 'main') {
+          build job: 'Deploy_to_main'
+        } else if (env.BRANCH_NAME == 'dev') {
+          build job: 'Deploy_to_dev'
         }
       }
     }
