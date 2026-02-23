@@ -9,8 +9,6 @@ pipeline {
   environment {
     APP_NAME = "my-app"
     IMAGE_TAG = "v1.0"
-    DOCKER_IMAGE = ""
-    PORT = ""
   }
 
   stages {
@@ -19,17 +17,22 @@ pipeline {
         script {
           echo "Detected Branch: ${env.BRANCH_NAME}"
 
-          if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
-            env.DOCKER_IMAGE = "nodemain:${env.IMAGE_TAG}"
-            env.PORT = "3000"
+          def config = [:]
+          
+          if (env.BRANCH_NAME == 'main') {
+            config.DOCKER_IMAGE = "nodemain:${env.IMAGE_TAG}"
+            config.PORT = "3000"
           } else if (env.BRANCH_NAME == 'dev') {
-            env.DOCKER_IMAGE = "nodedev:${env.IMAGE_TAG}"
-            env.PORT = "3001"
+            config.DOCKER_IMAGE = "nodedev:${env.IMAGE_TAG}"
+            config.PORT = "3001"
           } else {
             // Default for other branches
-            env.DOCKER_IMAGE = "${env.APP_NAME}:${env.IMAGE_TAG}"
-            env.PORT = "3000"
+            config.DOCKER_IMAGE = "${env.APP_NAME}:${env.IMAGE_TAG}"
+            config.PORT = "3000"
           }
+          
+          env.DOCKER_IMAGE = config.DOCKER_IMAGE
+          env.PORT = config.PORT
           
           echo "Docker Image: ${env.DOCKER_IMAGE}"
           echo "Port: ${env.PORT}"
