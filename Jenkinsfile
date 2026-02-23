@@ -9,6 +9,7 @@ pipeline {
   environment {
     APP_NAME = "my-app"
     IMAGE_TAG = "v1.0"
+    REGISTRY_NAMESPACE = "captainpiratez"
   }
 
   stages {
@@ -35,6 +36,12 @@ pipeline {
       }
     }
 
+    stage('Hadolint') {
+      steps {
+        sh 'hadolint Dockerfile'
+      }
+    }
+
     stage('Build') {
       steps {
         echo 'Building the application...'
@@ -53,8 +60,26 @@ pipeline {
       steps {
         sh "docker --version"
         sh "docker version --format '{{.Client.APIVersion}}'"
-        echo "Building Docker image: ${env.DOCKER_IMAGE}"
-        sh "docker build -t ${env.DOCKER_IMAGE} ."
+        echo "Building Docker image: ${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}"
+        sh "docker build -t ${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE} ."
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-hub-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh "docker login -u ${env.DOCKER_USER} -p ${env.DOCKER_PASS}"
+          sh "docker push ${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}"
+        }
+      }
+    }
+
+    stage('Scan Docker Image for Vulnerabilities') {
+      steps {
+        script {
+          def vulnerabilities = sh(script: "trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --no-progress ${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}", returnStdout: true).trim()
+          echo "Vulnerabilities Report:\n${vulnerabilities}"
+        }
       }
     }
 
