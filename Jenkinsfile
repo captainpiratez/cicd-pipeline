@@ -1,3 +1,5 @@
+@Library('jenkinslib') _
+
 pipeline {
   agent any
 
@@ -38,7 +40,7 @@ pipeline {
 
     stage('Hadolint') {
       steps {
-        sh 'hadolint Dockerfile'
+        lintDockerfile('Dockerfile')
       }
     }
 
@@ -77,8 +79,7 @@ pipeline {
     stage('Scan Docker Image for Vulnerabilities') {
       steps {
         script {
-          def vulnerabilities = sh(script: "trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --no-progress ${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}", returnStdout: true).trim()
-          echo "Vulnerabilities Report:\n${vulnerabilities}"
+          dockerScan("${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}")
         }
       }
     }
