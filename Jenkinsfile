@@ -25,7 +25,14 @@ pipeline {
           } else if (env.BRANCH_NAME == 'dev') {
             env.DOCKER_IMAGE = "nodedev:${env.IMAGE_TAG}"
             env.PORT = "3001"
+          } else {
+            // Default for other branches
+            env.DOCKER_IMAGE = "${env.APP_NAME}:${env.IMAGE_TAG}"
+            env.PORT = "3000"
           }
+          
+          echo "Docker Image: ${env.DOCKER_IMAGE}"
+          echo "Port: ${env.PORT}"
         }
       }
     }
