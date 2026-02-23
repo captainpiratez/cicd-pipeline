@@ -3,7 +3,7 @@ pipeline {
 
   tools {
     nodejs 'node-7.8.0'
-    dockerTool 'docker'
+    docker 'docker'
   }
 
   environment {
@@ -46,14 +46,18 @@ pipeline {
 
     stage('Docker build') {
       steps {
-        echo "Building Docker image: ${env.DOCKER_IMAGE_NAME}"
-        sh "docker build -t ${env.DOCKER_IMAGE_NAME} ."
+        sh "docker --version"
+        sh "docker version --format '{{.Client.APIVersion}}'"
+        echo "Building Docker image: ${env.DOCKER_IMAGE}"
+        sh "docker build -t ${env.DOCKER_IMAGE} ."
       }
     }
 
     stage('Deploy') {
       steps {
         script {
+          sh "docker --version"
+          sh "docker version --format '{{.Client.APIVersion}}'"
           sh "docker stop ${env.APP_NAME}-${env.BRANCH_NAME} || true"
           sh "docker rm ${env.APP_NAME}-${env.BRANCH_NAME} || true"
           
