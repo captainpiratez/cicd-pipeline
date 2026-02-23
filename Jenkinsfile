@@ -89,9 +89,17 @@ pipeline {
     success {
       script {
         if (env.BRANCH_NAME == 'main') {
-          build job: 'Deploy_to_main'
+          build job: 'Deploy_to_main', parameters: [
+            string(name: 'IMAGE', value: "${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}"),
+            string(name: 'APP_NAME', value: "${env.APP_NAME}-main"),
+            string(name: 'PORT', value: '3000')
+          ]
         } else if (env.BRANCH_NAME == 'dev') {
-          build job: 'Deploy_to_dev'
+          build job: 'Deploy_to_dev', parameters: [
+            string(name: 'IMAGE', value: "${env.REGISTRY_NAMESPACE}/${env.DOCKER_IMAGE}"),
+            string(name: 'APP_NAME', value: "${env.APP_NAME}-dev"),
+            string(name: 'PORT', value: '3001')
+          ]
         }
       }
     }
